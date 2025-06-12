@@ -1,6 +1,9 @@
 # fail2ban-report
 This tool generate a simple report of fail2ban activity.
 
+```bash
+python3 -m pip install pandas matplotlib geoip2 -U
+```
 
 ## Extract fail2ban logs in a CSV file
 
