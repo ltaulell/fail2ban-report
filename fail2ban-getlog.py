@@ -4,19 +4,19 @@
 
 from sys import argv
 
-if len(argv) != 2:
-    print("Usage: fail2ban-getlog <file>")
+if len(argv) != 3:
+    print("Usage: fail2ban-getlog <log> <file>")
     print("Extract fail2ban logs to CSV file.")
 else:
-    F_LOG = "/var/log/fail2ban.log"
-    f_old = open(argv[1], "r")
+    F_LOG = argv[1]
+    f_old = open(argv[2], "r")
     old = []
     for l in f_old:
         old.append(l[0:-1])
     f_old.close()
     print(len(old), "existing line(s).")
     f_in = open(F_LOG, "r")
-    f_out = open(argv[1], "a+")
+    f_out = open(argv[2], "a+")
     c = 0
     for l in f_in:
         l = l[0:-1].split(" ")
@@ -28,3 +28,4 @@ else:
     f_in.close()
     f_out.close() 
     print("Added", c, "new line(s).")
+

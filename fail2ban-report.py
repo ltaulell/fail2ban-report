@@ -83,3 +83,4 @@ if len(argv) != 4:
     print("Compute fail2ban CSV file and generate PDF report.")
 else:
     generate_report(argv[1], argv[2], argv[3])
+
