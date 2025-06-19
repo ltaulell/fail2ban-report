@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # coding: utf-8
-# Julien Pecqueur <julien@peclu.net>
+# Julien Pecqueur <julien@peclu DOT net>
 
 import pandas as pd
 import matplotlib
