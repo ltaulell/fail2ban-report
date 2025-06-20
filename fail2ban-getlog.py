@@ -3,37 +3,58 @@
 # Julien Pecqueur <julien@peclu DOT net>
 # Loïs Taulelle <ltaulell>
 
-from sys import argv
+#from sys import argv
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Extract fail2ban logs to CSV file")
-parser.add_argument("-d", action="store_true", help="toggle debug")
-parser.add_argument("filein", type=str, help="fial2ban log file to process")
-parser.add_argument("fileout", type=str, help="CSV file to append to")
+from pathlib import Path
+
+parser = argparse.ArgumentParser(description='Extract fail2ban logs to CSV file')
+parser.add_argument('-d', '--debug', action='store_true', help='toggle debug')
+parser.add_argument('filein', type=str, help='fail2ban log file to process')
+parser.add_argument('fileout', type=str, help='CSV file to append to')
 args = parser.parse_args()
 
 old = []
 
-if args.fileout:
-    try:
-        with open(args.fileout, 'r') as csvfile:
-            old = csvfile.readlines()
-            entries = len(old)
-            print(f'{entries} existing lines')
-    except IOError:
-        print(f'unable to open {csvfile.name}')
+try:
+    with open(args.fileout, 'r') as csvfile:
+        old = csvfile.readlines()
+        entries = len(old)
+        print(f'{entries} existing lines')
+except FileNotFoundError:
+    print(f'{args.fileout} does not exist, creating')
+    Path(args.fileout).touch()
 
-if args.filein:
-    try:
-        with open(args.filein, 'r') as logfile:
-            c = 0
-            for line in logfile:
-                line = line[0:-1].split(".")
-                if "Ban" in line:
-                    line = line[-1] + ";" + line[0] + ";" + line[1][0:-4]
-                    if not line in old:
-                        c += 1
+if args.debug:
+    print('pouet')
+
+try:
+    with open(args.fileout, 'a') as csvfile:
+        try:
+            with open(args.filein, 'r') as logfile:
+                c = 0
+                for line in logfile:
+                    line = line[0:-1].split(' ')
+                    if 'Ban' in line:
+                        if args.debug:
+                            print(line)
+                        outline = line[-1] + ';' + line[0] + ';' + line[1][0:-4]
+                        if outline not in old:
+                            # jusque là, ça allait...
+                            if args.debug:
+                                print(outline)
+                            csvfile.write(outline + '\n')
+                            c += 1
+        except IOError:
+            print(f'unable to open {logfile.name}')
+
+except IOError:
+    print(f'error with {csvfile.name}')
+
+print(f'added {c} lines')
+if args.debug:
+    print(old)
 
 """
 
