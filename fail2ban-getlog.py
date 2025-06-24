@@ -16,18 +16,22 @@ parser.add_argument('fileout', type=str, help='CSV file to append to')
 args = parser.parse_args()
 
 old = []
+old_lines = []
 
 try:
     with open(args.fileout, 'r') as csvfile:
-        old = csvfile.readlines()
-        entries = len(old)
+        old_lines = csvfile.readlines()
+        entries = len(old_lines)
         print(f'{entries} existing lines')
 except FileNotFoundError:
     print(f'{args.fileout} does not exist, creating')
     Path(args.fileout).touch()
 
+for line in old_lines:
+    old.append(line.strip())
+
 if args.debug:
-    print('pouet')
+    print(old)
 
 try:
     with open(args.fileout, 'a') as csvfile:
@@ -41,9 +45,8 @@ try:
                             print(line)
                         outline = line[-1] + ';' + line[0] + ';' + line[1][0:-4]
                         if outline not in old:
-                            # jusque là, ça allait...
                             if args.debug:
-                                print(outline)
+                                print(f'{c}, {outline}')
                             csvfile.write(outline + '\n')
                             c += 1
         except IOError:
@@ -53,8 +56,7 @@ except IOError:
     print(f'error with {csvfile.name}')
 
 print(f'added {c} lines')
-if args.debug:
-    print(old)
+
 
 """
 
