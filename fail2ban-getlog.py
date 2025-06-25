@@ -3,8 +3,7 @@
 # Julien Pecqueur <julien@peclu DOT net>
 # Loïs Taulelle <ltaulell>
 
-#from sys import argv
-
+import gzip
 import argparse
 
 from pathlib import Path
@@ -18,6 +17,28 @@ args = parser.parse_args()
 # init empty
 old_lines = []
 old = []
+
+
+def filter_line(lines, csvfile):
+    """ filter out lines """
+    c = 0
+    for line in lines:
+        line = line[0:-1].split(' ')
+        if 'Ban' in line:
+            # filter out, keep IP;date[YYYY-MM-dd];time[hh:mm:ss]
+            outline = ';'.join([line[-1], line[0], line[1][0:-4]])
+
+            if args.debug:
+                print(outline)
+
+            if outline not in old:
+                # only keep new ones
+                if args.debug:
+                    print(f'{c}: {outline}')
+                csvfile.write(''.join([outline, '\n']))
+                c += 1
+    print(f'added {c} lines')
+
 
 try:
     with open(args.fileout, 'r') as csvfile:
@@ -34,31 +55,17 @@ except IOError as e:
 for line in old_lines:
     old.append(line.strip())
 
-if args.debug:
-    print(old)
-
 try:
     with open(args.fileout, 'a') as csvfile:
-        try:
-            with open(args.filein, 'r') as logfile:
-                c = 0
-                for line in logfile:
-                    line = line[0:-1].split(' ')
-                    if 'Ban' in line:
-                        # filter out, keep IP;date[YYYY-MM-dd];time[hh:mm:ss]
-                        if args.debug:
-                            print(line)
-                        outline = line[-1] + ';' + line[0] + ';' + line[1][0:-4]
-                        if outline not in old:
-                            # only keep new ones
-                            if args.debug:
-                                print(f'{c}, {outline}')
-                            csvfile.write(outline + '\n')
-                            c += 1
-        except IOError as e:
-            print(f'unable to open {logfile.name}: {e}')
+        with gzip.open(args.filein, 'rt') as zipfile:
+            try:
+                loglines = zipfile.readlines()
+                filter_line(loglines, csvfile)
+            except gzip.BadGzipFile:
+                print('not a gzip log file')
+                with open(args.filein, 'r') as logfile:
+                    loglines = logfile.readlines()
+                    filter_line(loglines, csvfile)
 
 except IOError as e:
     print(f'error with {csvfile.name}: {e}')
-
-print(f'added {c} lines')
