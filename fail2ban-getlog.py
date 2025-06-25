@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # coding: utf-8
 # Julien Pecqueur <julien@peclu DOT net>
 # Loïs Taulelle <ltaulell>
@@ -15,8 +15,9 @@ parser.add_argument('filein', type=str, help='fail2ban log file to process')
 parser.add_argument('fileout', type=str, help='CSV file to append to')
 args = parser.parse_args()
 
-old = []
+# init empty
 old_lines = []
+old = []
 
 try:
     with open(args.fileout, 'r') as csvfile:
@@ -24,9 +25,12 @@ try:
         entries = len(old_lines)
         print(f'{entries} existing lines')
 except FileNotFoundError:
-    print(f'{args.fileout} does not exist, creating')
+    print(f'{args.fileout} does not exist, creating empty one')
     Path(args.fileout).touch()
+except IOError as e:
+    print(f'unable to open {args.fileout}: {e}')
 
+# cleanup lines from '\n'
 for line in old_lines:
     old.append(line.strip())
 
@@ -41,44 +45,20 @@ try:
                 for line in logfile:
                     line = line[0:-1].split(' ')
                     if 'Ban' in line:
+                        # filter out, keep IP;date[YYYY-MM-dd];time[hh:mm:ss]
                         if args.debug:
                             print(line)
                         outline = line[-1] + ';' + line[0] + ';' + line[1][0:-4]
                         if outline not in old:
+                            # only keep new ones
                             if args.debug:
                                 print(f'{c}, {outline}')
                             csvfile.write(outline + '\n')
                             c += 1
-        except IOError:
-            print(f'unable to open {logfile.name}')
+        except IOError as e:
+            print(f'unable to open {logfile.name}: {e}')
 
-except IOError:
-    print(f'error with {csvfile.name}')
+except IOError as e:
+    print(f'error with {csvfile.name}: {e}')
 
 print(f'added {c} lines')
-
-
-"""
-
-else:
-    F_LOG = argv[1]
-    f_old = open(argv[2], "r")
-    old = []
-    for l in f_old:
-        old.append(l[0:-1])
-    f_old.close()
-    print(len(old), "existing line(s).")
-    f_in = open(F_LOG, "r")
-    f_out = open(argv[2], "a+")
-    c = 0
-    for l in f_in:
-        l = l[0:-1].split(" ")
-        if "Ban" in l:
-            l = l[-1]+";"+l[0]+";"+l[1][0:-4]
-            if not l in old:
-                f_out.write(l+"\n")
-                c += 1
-    f_in.close()
-    f_out.close() 
-    print("Added", c, "new line(s).")
-"""
