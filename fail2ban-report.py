@@ -3,6 +3,7 @@
 # Julien Pecqueur <julien@peclu DOT net>
 
 import pandas as pd
+import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import geoip2.database
@@ -52,6 +53,12 @@ def get_nb_ban_by_country(data, f_country):
     reader.close()
     return(d)
 
+# Creating autocpt arguments
+def reformat(pct, allvalues):
+    absolute = int(pct / 100.*np.sum(allvalues))
+    # return "{:.1f}%\n({:d} g)".format(pct, absolute)
+    return f'{absolute}'
+
 def generate_report(f_log, f_country, f_pdf):
     
     data = load_file(f_log)
@@ -65,14 +72,16 @@ def generate_report(f_log, f_country, f_pdf):
     fig.savefig(pp, format='pdf')
     
     nb_ban_by_country = get_nb_ban_by_country(data, f_country)
-    df = pd.DataFrame.from_dict(nb_ban_by_country, orient='index').rename(columns={0:"Bans"}).sort_values(by='Bans', ascending=False).head(20)
-    plot = df.plot(title="Bans by country (top 20)", kind='pie', subplots=True, legend=False, figsize=(10.0,10.0))
+    # df = pd.DataFrame.from_dict(nb_ban_by_country, orient='index').rename(columns={0:"Bans"}).sort_values(by='Bans', ascending=False).head(20)
+    df = pd.DataFrame.from_dict(nb_ban_by_country, orient='index').sort_values(by=0, ascending=False).head(20).rename(columns={0:""})
+    # autopct='%1.1f%%'
+    plot = df.plot(title="Bans by country (top 20)", kind='pie', subplots=True, legend=False, figsize=(10.0,10.0), autopct=lambda pct: reformat(pct, df))
     fig = plot[0].get_figure()
     fig.savefig(pp, format='pdf')
 
     nb_ban_by_ip = get_nb_ban_by_ip(data)
-    df = pd.DataFrame.from_dict(nb_ban_by_ip, orient='index').rename(columns={0:"Bans"}).sort_values(by='Bans', ascending=False).head(20)
-    plot = df.plot(title="Bans by IP (top 20)", kind='pie', legend=False, subplots=True, figsize=(10.0,10.0))
+    df = pd.DataFrame.from_dict(nb_ban_by_ip, orient='index').sort_values(by=0, ascending=False).head(20).rename(columns={0:""})
+    plot = df.plot(title="Bans by IP (top 20)", kind='pie', legend=False, subplots=True, figsize=(10.0,10.0), autopct=lambda pct: reformat(pct, df))
     fig = plot[0].get_figure()
     fig.savefig(pp, format='pdf')
     
